@@ -55,15 +55,31 @@ Master<-merge(data, PrepMasteR, by ='Start.station')
 ### remove NA's
 newdata <- na.omit(Master)
 
+####bring in lubridate and recast variables
+install.packages('lubridate'); library(lubridate)
 
-### count 
-count<-newdata %>%
+Mapprep<-mutate(newdata, Date = mdy(gsub( " .*$", "", Start.date)), Time= sub(".* ", "", Start.date))
+Mapprep<-mutate(Mapprep, Time = gsub(":.*$", "", Time))
+
+
+### Create data set for mapping
+Mapdf<-Mapprep %>%
   group_by(Start.station)%>%
   summarize(count = n(),
-            Lat =first(lat),
-            Long = first(lon))
+            lat = first(lat),
+            lon = first(lon))
+### view data frame and check to see variables are correct type 
+head(Mapdf)
+str(Mapdf)
 
-### next steps
-### bring in map with ggmap
-### clean date up
-### plot counts of stations based off time 
+### Get map
+install.packages('ggmap');library(ggmap)
+myggmap <- get_googlemap('DC')
+
+##plot points on the map
+mapPoints<-ggmap(myggmap) + 
+  geom_point(aes(x=lon, y = lat, color = count), data = Mapdf, alpha = .5)
+
+
+###create ugly map
+mapPoints
