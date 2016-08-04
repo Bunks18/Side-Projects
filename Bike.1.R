@@ -45,11 +45,9 @@ Geoprep$ID<-1:nrow(Geoprep)
 OldUnique<-unique(Stations); OldUnique$ID<-1:nrow(OldUnique)
 
 ### Merge OldUnique with Geo
-
 PrepMasteR<-merge(OldUnique, Geoprep, by ='ID')
 
 ### Join lat and long with Original File
-
 Master<-merge(data, PrepMasteR, by ='Start.station')
 
 ### remove NA's
@@ -68,18 +66,21 @@ Mapdf<-Mapprep %>%
   summarize(count = n(),
             lat = first(lat),
             lon = first(lon))
-### view data frame and check to see variables are correct type 
-head(Mapdf)
-str(Mapdf)
 
-### Get map
-install.packages('ggmap');library(ggmap)
-myggmap <- get_googlemap('DC')
+###create map with leaflet
+install.packages('leaflet'); library(leaflet)
 
-##plot points on the map
-mapPoints<-ggmap(myggmap) + 
-  geom_point(aes(x=lon, y = lat, color = count), data = Mapdf, alpha = .5)
+### create custom map template 
+m <- leaflet() %>% setView(lng = -77.0369, lat = 38.9072, zoom = 12)
 
+###create color pallet 
+pal <- colorNumeric(
+  palette = "Reds",
+  domain = Mapdf$count
+)
 
-###create ugly map
-mapPoints
+##create map
+mymap<-m %>% addCircleMarkers(~lon, ~lat, color = ~pal(count),fillOpacity = 1, radius = 5, data = Mapdf) %>% 
+  addTiles() %>% addLegend(pal = pal, title ='Count of Bikes/ Station', 
+                           values = Mapdf$count, opacity = 1) %>% addProviderTiles("CartoDB.DarkMatter")
+mymap
