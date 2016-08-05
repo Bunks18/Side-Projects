@@ -1,0 +1,1 @@
+<data> %>% group_by(<var1>, <var2>, <var3>, ...)
